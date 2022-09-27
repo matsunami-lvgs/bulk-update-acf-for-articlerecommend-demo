@@ -22,13 +22,15 @@ function bu_acf_article_template()
     echo <<<EOF
     <h1>関連記事一括更新</h1>
     <form enctype="multipart/form-data">
-    <input type="hidden" name="action" value="bu_acf_article_update" />
-    <input type="hidden" name="MAX_FILE_SIZE" value="30000" />
-    このファイルをアップロード: <input name="userfile" type="file" id="bu_acf_file" />
-    <p>
-    <button type="button" onclick="post('$admin')">ファイルを送信</button>
-    </p>
+        <input type="hidden" name="action" value="bu_acf_article_update" />
+        <input type="hidden" name="MAX_FILE_SIZE" value="30000" />
+        このファイルをアップロード: <input name="userfile" type="file" id="bu_acf_file" />
+        <p>
+            <button type="button" onclick="post('$admin')">ファイルを送信</button>
+        </p>
     </form>
+    <div class="message error" id="bu_acf_error" hidden></div>
+    <div class="updated" id="bu_acf_updated" hidden></div>
     $script
     EOF;
 }
@@ -37,19 +39,17 @@ function bu_acf_article_template()
 add_action('wp_ajax_bu_acf_article_update', 'bu_acf_article_update');
 function bu_acf_article_update()
 {
-    //ファイルの中身を出力
-    echo file_get_contents($_FILES['userfile']['tmp_name']) . PHP_EOL;
-    //処理に失敗した場合はdie, 成功した場合はexitで返事
-    $result = true;
     if (!$_FILES) {
-        echo 'ファイルがありません';
-        wp_die();
+        //そのほかバリデーションエラーは400で返す
+        wp_die('ファイルがありません', '', ['response' => 400]);
     }
+    $result = true;
     if (!$result) {
-        echo 'エラー';
-        wp_die();
+        wp_die('エラー', '', ['response' => 500]);
     }
-    echo '成功しました';
+    //ファイルの中身を出力
+    $preview = file_get_contents($_FILES['userfile']['tmp_name'], false, null, 0, 100);
+    echo '成功しました。';
     exit;
 }
 
