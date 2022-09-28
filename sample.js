@@ -1,10 +1,10 @@
 const body = new FormData();
-body.append('action', 'bu_acf_article_update')
+body.append('action', 'bulk_update_acf_article_update');
 
-const el_files = document.getElementById('bu_acf_file');
+const el_files = document.getElementById('bulk_update_acf_file');
 
 el_files.addEventListener('change', (e) => {
-  const file = e.target.files[0]
+  const file = e.target.files[0];
   body.append('userfile', file);
 })
 
@@ -13,10 +13,10 @@ function post(url) {
   request.open('POST', url, true);
   request.onreadystatechange = () => {
     if (request.readyState == 4 && request.status == 200) {
-      addMessgae('bu_acf_updated', request.responseText);
+      addMessgae('bulk_update_acf_updated', request.responseText);
     }
     if (request.readyState == 4 && request.status !== 200) {
-      addMessgae('bu_acf_error', request.responseText);
+      addMessgae('bulk_update_acf_error', request.responseText);
     }
   }
   request.send(body);
