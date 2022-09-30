@@ -25,5 +25,5 @@ function post(url) {
 function addMessgae(element_id, response_text) {
   const el = document.getElementById(element_id);
   el.removeAttribute('hidden');
-  el.insertAdjacentHTML('afterbegin', `<p>${response_text}<p/>`);
+  el.insertAdjacentHTML('beforeend', `<p>${response_text}<p/>`);
 }

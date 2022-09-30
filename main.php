@@ -23,8 +23,7 @@ function bulk_update_acf_article_template()
     <h1>関連記事一括更新</h1>
     <form enctype="multipart/form-data">
         <input type="hidden" name="action" value="bulk_update_acf_article_update" />
-        <input type="hidden" name="MAX_FILE_SIZE" value="30000" />
-        このファイルをアップロード: <input name="userfile" type="file" id="bulk_update_acf_file" />
+        このファイルをアップロード: <input name="userfile" type="file" id="bulk_update_acf_file" accept="text/csv"/>
         <p>
             <button type="button" onclick="post('$admin')">ファイルを送信</button>
         </p>
