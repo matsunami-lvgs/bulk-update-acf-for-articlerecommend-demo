@@ -1,5 +1,5 @@
 const body = new FormData();
-body.append('action', 'bulk_update_acf_article_update');
+body.append('action', 'bulk_update_acf_update');
 
 const el_files = document.getElementById('bulk_update_acf_file');
 
@@ -13,7 +13,7 @@ function post(url) {
   request.open('POST', url, true);
   request.onreadystatechange = () => {
     if (request.readyState == 4 && request.status == 200) {
-      addMessgae('bulk_update_acf_updated', request.responseText);
+      addMessgae('bulk_update_acf_success', request.responseText);
     }
     if (request.readyState == 4 && request.status !== 200) {
       addMessgae('bulk_update_acf_error', request.responseText);

@@ -11,32 +11,32 @@ add_action('admin_menu', function () {
         '関連記事一括更新',
         'manage_options',
         'custom_menu_page',
-        'bulk_update_acf_article_template',
+        'bulk_update_acf_template',
     );
 });
 
-function bulk_update_acf_article_template()
+function bulk_update_acf_template()
 {
     $admin = admin_url('admin-ajax.php');
     $script = '<script>' . file_get_contents(__DIR__ . '/sample.js') . '</script>';
     echo <<<EOF
     <h1>関連記事一括更新</h1>
     <form enctype="multipart/form-data">
-        <input type="hidden" name="action" value="bulk_update_acf_article_update" />
+        <input type="hidden" name="action" value="bulk_update_acf_update" />
         このファイルをアップロード: <input name="userfile" type="file" id="bulk_update_acf_file" accept="text/csv"/>
         <p>
             <button type="button" onclick="post('$admin')">ファイルを送信</button>
         </p>
     </form>
     <div class="message error" id="bulk_update_acf_error" hidden></div>
-    <div class="updated" id="bulk_update_acf_updated" hidden></div>
+    <div class="updated" id="bulk_update_acf_success" hidden></div>
     $script
     EOF;
 }
 
 //後でクラスにする
-add_action('wp_ajax_bulk_update_acf_article_update', 'bulk_update_acf_article_update');
-function bulk_update_acf_article_update()
+add_action('wp_ajax_bulk_update_acf_update', 'bulk_update_acf_update');
+function bulk_update_acf_update()
 {
     if (!$_FILES) {
         wp_die('ファイルがありません', '', ['response' => 400]);
