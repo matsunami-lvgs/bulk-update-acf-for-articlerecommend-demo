@@ -7,6 +7,10 @@ class BulkUpdateAcf
 {
     public function init()
     {
+        require_once(__DIR__ . '/update.php');
+        require_once(__DIR__ . '/result.php');
+        require_once(__DIR__ . '/validation.php');
+
         add_action('admin_menu', function () {
             add_menu_page(
                 '関連記事一括更新',
@@ -36,14 +40,19 @@ class BulkUpdateAcf
         $script
         EOF;
     }
+
     public function update()
     {
-        include(__DIR__ . '/update.php');
         $update = new BulkUpdateAcfUpdate;
-        echo 'ほげ';
+        $result = $update->update();
+        if (!$result->getResult()) {
+            wp_die($result->getMessage(), '', $result->getStatus());
+        }
+        //でばっぐ
         echo var_dump($update->file);
         echo $update->file->fgets();
-        //$update->update();
+        //本番での出力
+        echo $result->getMessage();
         exit;
     }
 }

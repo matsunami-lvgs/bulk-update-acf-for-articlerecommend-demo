@@ -3,17 +3,27 @@ class BulkUpdateAcfUpdate
 {
     private $validator;
     private $querymaker;
-    public $file;
 
     public function __construct()
     {
-        //$this->validator = new BulkUpdateAcfValidation;
         //$this->querymaker = new BulkUpdateAcfQueryMaker;
-        $this->file = new SplFileObject($_FILES['userfile']['tmp_name']);
+        $this->validator = new BulkUpdateAcfValidator;
     }
     public function update()
     {
-        $this->validator->hoge();
+        try {
+            $file = new SplFileObject($_FILES['userfile']['tmp_name']);
+        } catch (Exception $e) {
+            return new BulkUpdateAcfResult(false, 'ファイルが存在しません。', 400);
+        }
+
+
+        $result = $this->validator->validation();//result系のクラス
+        if (!$result->getStatus()){
+            return $result;
+        }
+        $this->validator->getIrr();
+        return $result;
     }
 
     private function execute_query($query)
@@ -21,22 +31,3 @@ class BulkUpdateAcfUpdate
         $wpdb->query($query);
     }
 }
-
-$arr = [
-    [
-        'post_id' => 10,
-        'recomend_posts' => [12, 11, 45, 56]
-    ],
-    [
-        'post_id' => 10,
-        'recomend_posts' => [12, 11, 45, 56]
-    ],
-    [
-        'post_id' => 10,
-        'recomend_posts' => [12, 11, 45, 56]
-    ],
-    [
-        'post_id' => 10,
-        'recomend_posts' => [12, 11, 45, 56]
-    ],
-];
