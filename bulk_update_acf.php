@@ -37,7 +37,6 @@ class BulkUpdateAcf
                 <button type="button" onclick="post('$admin')">ファイルを送信</button>
             </p>
         </form>
-        ほげ
         <div class="message error" id="bulk_update_acf_error" hidden></div>
         <div class="updated" id="bulk_update_acf_success" hidden></div>
         $script
