@@ -6,14 +6,12 @@ const el_files = document.getElementById('bulk_update_acf_file')
 el_files.addEventListener('change', (e) => {
   const file = e.target.files[0]
   body.append('userfile', file)
-})
+}, {passive: true})
 
 function post(url) {
   let request = new XMLHttpRequest
   request.open('POST', url, true)
-  console.log('hoge')
   request.onreadystatechange = () => {
-    console.log('fuga')
     if (request.readyState == 4 && request.status == 200) {
       addMessgae('bulk_update_acf_success', request.responseText)
     }

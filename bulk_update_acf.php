@@ -5,7 +5,7 @@ Description: Advanced Castom Fields で 'article_recommend' と定義したカ�
 */
 class BulkUpdateAcf
 {
-    public function init()
+    public function __construct()
     {
         require_once(__DIR__ . '/update.php');
         require_once(__DIR__ . '/file_validator.php');
@@ -63,5 +63,4 @@ class BulkUpdateAcf
 }
 
 global $bulck_update_acf;
-$bulck_update_acf = new BulkUpdateAcf;
-$bulck_update_acf->init();
+$bulck_update_acf = new BulkUpdateAcf();
