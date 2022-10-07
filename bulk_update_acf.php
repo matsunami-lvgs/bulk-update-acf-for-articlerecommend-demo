@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: BulkUpdateACF for ArticleRecommend
+Plugin Name: BulkUpdateACF
 Description: Advanced Castom Fields で 'article_recommend' と定義したカスタムフィードに対して、CSVデータを元に一括で変更する
 */
 class BulkUpdateAcf
@@ -8,8 +8,10 @@ class BulkUpdateAcf
     public function init()
     {
         require_once(__DIR__ . '/update.php');
-        require_once(__DIR__ . '/result.php');
-        require_once(__DIR__ . '/validation.php');
+        require_once(__DIR__ . '/file_validator.php');
+        require_once(__DIR__ . '/result/result_interface.php');
+        require_once(__DIR__ . '/result/failure.php');
+        require_once(__DIR__ . '/result/success.php');
 
         add_action('admin_menu', function () {
             add_menu_page(
@@ -20,7 +22,7 @@ class BulkUpdateAcf
                 array($this, 'view'),
             );
         });
-        add_action('wp_ajax_bulk_update_acf_update', array($this, 'update'));
+        add_action('wp_ajax_bulk_update_acf_update', array($this, 'post'));
     }
 
     public function view()
@@ -35,25 +37,28 @@ class BulkUpdateAcf
                 <button type="button" onclick="post('$admin')">ファイルを送信</button>
             </p>
         </form>
+        ほげ
         <div class="message error" id="bulk_update_acf_error" hidden></div>
         <div class="updated" id="bulk_update_acf_success" hidden></div>
         $script
         EOF;
     }
 
-    public function update()
+    public function post()
     {
-        $update = new BulkUpdateAcfUpdate;
-        $result = $update->update();
-        if (!$result->getResult()) {
-            wp_die($result->getMessage(), '', $result->getStatus());
+        $file_path = $_FILES['userfile']['tmp_name'];
+        try{
+            if (!file_exists($file_path)) {
+                wp_die('ファイルが存在しません。', '', 400);
+            }
+            $file = new SplFileObject($file_path);
+            $update = new BulkUpdateAcfUpdate($file);
+            $result = $update->update();
+        } catch (Exception $e) {
+            wp_die($e);
         }
-        //でばっぐ
-        echo var_dump($update->file);
-        echo $update->file->fgets();
-        //本番での出力
-        echo $result->getMessage();
-        exit;
+            $result->sendMessage();
+            exit;
     }
 }
 
