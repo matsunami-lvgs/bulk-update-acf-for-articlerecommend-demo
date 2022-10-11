@@ -8,21 +8,22 @@ class BulkUpdateAcf
     public function __construct()
     {
         require_once(__DIR__ . '/update.php');
-        require_once(__DIR__ . '/file_validator.php');
-        require_once(__DIR__ . '/result/result_interface.php');
-        require_once(__DIR__ . '/result/failure.php');
-        require_once(__DIR__ . '/result/success.php');
+        require_once(__DIR__ . '/validator.php');
+        require_once(__DIR__ . '/file.php');
+        require_once(__DIR__ . '/result_interface.php');
+        require_once(__DIR__ . '/failure.php');
+        require_once(__DIR__ . '/success.php');
 
         add_action('admin_menu', function () {
             add_menu_page(
                 '関連記事一括更新',
                 '関連記事一括更新',
                 'manage_options',
-                'custom_menu_page',
+                'bulk_update_acf',
                 array($this, 'view'),
             );
         });
-        add_action('wp_ajax_bulk_update_acf_update', array($this, 'post'));
+        add_action('wp_ajax_bulk_update_acf_update', array($this, 'bulk_update_acf_update'));
     }
 
     public function view()
@@ -43,21 +44,13 @@ class BulkUpdateAcf
         EOF;
     }
 
-    public function post()
+    public function bulk_update_acf_update()
     {
         $file_path = $_FILES['userfile']['tmp_name'];
-        try{
-            if (!file_exists($file_path)) {
-                wp_die('ファイルが存在しません。', '', 400);
-            }
-            $file = new SplFileObject($file_path);
-            $update = new BulkUpdateAcfUpdate($file);
-            $result = $update->update();
-        } catch (Exception $e) {
-            wp_die($e);
-        }
-            $result->sendMessage();
-            exit;
+        $update = new BulkUpdateAcfUpdate($file_path);
+        $result = $update->update();
+        $result->sendMessage();
+        exit;
     }
 }
 

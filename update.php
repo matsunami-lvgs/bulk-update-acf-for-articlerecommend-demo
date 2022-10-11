@@ -2,93 +2,65 @@
 class BulkUpdateAcfUpdate
 {
     private $validator;
-    private $file;
+    private $file_path;
 
-    public function __construct(SplFileObject $file)
+    public function __construct($file_path)
     {
-        $this->file = $file;
-        $this->validator = new BulkUpdateAcfValidator($file);
+        $this->file_path = $file_path;
+        $this->validator = new BulkUpdateAcfValidator($file_path);
     }
 
-    public function update():BulkUpdateAcfResult
+    public function update()
     {
         $validate_result = $this->validator->validate();
         if ($validate_result->isFailured()) {
             return $validate_result;
-        };
-        $sql = $this->makeSql($this->file);
-        $wpdb->query($sql);
-        return new BulkUpdateAcfResultSuccess();
-    }
-
-    private function formatFile()
-    {
-        $formatted = [];
-        $this->file->seek(1);
-        for ($i = 1; !$this->file->eof(); $i++) {
-            $row = $this->file->fgetcsv();
-            $post_id = $row[0];
-            foreach ($row as $key => $value) {
-                if ($post_id == $value) {
-                    unset($row[$key]);
-                }
-            }
-            $recomend_posts = array_values($row);
-
-            if ($post_id && $recomend_posts) {
-                $formatted[$post_id] = $recomend_posts;
-            }
         }
-        return $formatted;
+        $sql = $this->execute();
+        global $wpdb;
+        $wpdb->query($sql);
+        return new BulkUpdateAcfResultSuccess('成功しました。');
     }
 
-    private function makeSql () {
+    private function execute()
+    {
         //ヒアドキュメント内で定数を展開できないため定数の代わりを変数で定義
-        $formatted = $this->formatFile();
+        $file = new BulkUpdateAcfFile($this->file_path);
+        $csv = $file->fetchCsv();
         $table = 'wp_postmeta';
         $columns = 'meta_value, post_id, meta_key';
         //各環境でチェック
         $article_recomended = 'article_recommend';
         $under_article_recomended = '_article_recommend';
         $under_article_recomended_meta_value = 'field_606464c813bc6';
+        
+        $target_ids = implode("', '", array_column($csv, 'target_id'));
+        global $wpdb;
+        $delete_query = <<<EOM
+        DELETE FROM
+            $table
+        WHERE
+            meta_key IN ('$article_recomended' ,'$under_article_recomended') AND
+            post_id IN ('$target_ids');
+        EOM;
+        $wpdb->query($delete_query);
 
-        $sql = "BEGIN;\n";
-        foreach ($formatted as $post_id => $recomend_posts) {
-            $serialized = serialize($recomend_posts);
-            $delete_and_insert = <<<EOM
-            DELETE FROM 
-                $table
-            WHERE
-                meta_key = '$article_recomended'
-                AND post_id = '$post_id';
-
-            DELETE FROM 
-                $table
-            WHERE
-                meta_key = '$under_article_recomended'
-                AND post_id = '$post_id';
-
-            INSERT INTO
-                $table ($columns)
-            VALUES 
-                (
-                    '$serialized',
-                    '$post_id',
-                    '$article_recomended'
-                );
-
-            INSERT INTO
-                $table ($columns)
-            VALUES
-                (
-                    '$under_article_recomended_meta_value',
-                    '$post_id',
-                    '$under_article_recomended'
-                );\n\n
+        $insert_values_arr = [];
+        foreach ($csv as $line) {
+            $target_id = $line['target_id'];
+            $serialized_related_ids = serialize($line['related_ids']);
+            $insert_values_arr[] = <<<EOM
+            ('$serialized_related_ids', '$target_id', '$article_recomended'),
+            ('$under_article_recomended_meta_value', '$target_id', '$under_article_recomended')
             EOM;
-            $sql .= $delete_and_insert;
         }
-        $sql .= "COMMIT;\n";
-        return $sql;
+        $insert_values = implode(',', $insert_values_arr);
+        $insert_query = <<<EOM
+        INSERT INTO
+            $table ($columns)
+        VALUES 
+            $insert_values
+        EOM;
+        $wpdb->query($insert_query );
     }
 }

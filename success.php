@@ -5,4 +5,9 @@ class BulkUpdateAcfResultSuccess extends BulkUpdateAcfResult
     {
         echo $this->message;
     }
+
+    public function addMessage($add)
+    {
+        $this->message .= $add . '<br>';
+    }
 }
