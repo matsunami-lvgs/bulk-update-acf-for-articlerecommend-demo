@@ -16,51 +16,58 @@ class BulkUpdateAcfUpdate
         if ($validate_result->isFailured()) {
             return $validate_result;
         }
-        $sql = $this->execute();
-        global $wpdb;
-        $wpdb->query($sql);
+        $this->execute();
         return new BulkUpdateAcfResultSuccess('成功しました。');
     }
 
     private function execute()
     {
-        //ヒアドキュメント内で定数を展開できないため定数の代わりを変数で定義
         $file = new BulkUpdateAcfFile($this->file_path);
-        $csv = $file->fetchCsv();
-        $table = 'wp_postmeta';
-        $columns = 'meta_value, post_id, meta_key';
-        //各環境でチェック
-        $article_recomended = 'article_recommend';
-        $under_article_recomended = '_article_recommend';
-        $under_article_recomended_meta_value = 'field_606464c813bc6';
+        $query_origin = $file->fetchCsv();
+        //ヒアドキュメント内で定数を展開できないため変数の配列で定義
+        $recomend_attributes = [
+            'name' => 'article_recommend',
+            'under_name' => 'article_recommend',
+            'meta_value' => 'field_606464c813bc6',
+        ];
         
-        $target_ids = implode("', '", array_column($csv, 'target_id'));
         global $wpdb;
-        $delete_query = <<<EOM
+        $delete_query = $this->makeDeleteQuery($query_origin, $recomend_attributes);
+        $wpdb->query($delete_query);
+        $insert_query = $this->makeInsertQuery($query_origin, $recomend_attributes);
+        $wpdb->query($insert_query );
+    }
+
+    private function makeDeleteQuery($query_origin, $recomend_attributes)
+    {
+        $target_ids = implode("', '", array_column($query_origin, 'target_id'));
+        return <<<EOM
         DELETE FROM
-            $table
+            wp_postmeta
         WHERE
-            meta_key IN ('$article_recomended' ,'$under_article_recomended') AND
+            meta_key IN ('{$recomend_attributes['name']}' ,'{$recomend_attributes['under_name']}') AND
             post_id IN ('$target_ids');
         EOM;
-        $wpdb->query($delete_query);
+    }
 
+    private function makeInsertQuery($query_origin, $recomend_attributes)
+    {
         $insert_values_arr = [];
-        foreach ($csv as $line) {
+        foreach ($query_origin as $line) {
             $target_id = $line['target_id'];
             $serialized_related_ids = serialize($line['related_ids']);
             $insert_values_arr[] = <<<EOM
-            ('$serialized_related_ids', '$target_id', '$article_recomended'),
-            ('$under_article_recomended_meta_value', '$target_id', '$under_article_recomended')
+            ('$serialized_related_ids', '$target_id', '{$recomend_attributes['name']}' ),
+            ('{$recomend_attributes['meta_value']}', '$target_id', '{$recomend_attributes['under_name']}')
             EOM;
         }
         $insert_values = implode(',', $insert_values_arr);
-        $insert_query = <<<EOM
+        return <<<EOM
         INSERT INTO
-            $table ($columns)
+            wp_postmeta (meta_value, post_id, meta_key)
         VALUES 
-            $insert_values
+            $insert_values;
         EOM;
-        $wpdb->query($insert_query );
+
     }
 }
