@@ -29,13 +29,13 @@ class BulkUpdateAcf
     public function view()
     {
         $admin = admin_url('admin-ajax.php');
-        $script = '<script>' . file_get_contents(__DIR__ . '/sample.js') . '</script>';
+        $script = '<script>' . file_get_contents(__DIR__ . '/bulk_update_acf.js') . '</script>';
         echo <<<EOF
         <h1>関連記事一括更新</h1>
         <form enctype="multipart/form-data">
             このファイルをアップロード: <input name="userfile" type="file" id="bulk_update_acf_file" accept="text/csv"/>
             <p>
-                <button type="button" onclick="post('$admin')">ファイルを送信</button>
+                <button type="button" onclick="post('$admin');disabled = true">ファイルを送信</button>
             </p>
         </form>
         <div class="message error" id="bulk_update_acf_error" hidden></div>
